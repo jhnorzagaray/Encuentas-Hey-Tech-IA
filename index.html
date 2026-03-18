@@ -183,6 +183,14 @@ body::before { content:''; position:fixed; inset:0; z-index:0;
         <label class="field-label" for="f-contacto">Nombre del contacto *</label>
         <input class="field-input" type="text" id="f-contacto" placeholder="Nombre completo">
       </div>
+      <div class="field-wrap">
+        <label class="field-label" for="f-email">Email *</label>
+        <input class="field-input" type="email" id="f-email" placeholder="correo@empresa.com">
+      </div>
+      <div class="field-wrap">
+        <label class="field-label" for="f-telefono">Teléfono <span style="font-weight:400;opacity:.6">(opcional)</span></label>
+        <input class="field-input" type="tel" id="f-telefono" placeholder="+52 55 0000 0000">
+      </div>
     </div>
   </div>
 
@@ -409,9 +417,9 @@ body::before { content:''; position:fixed; inset:0; z-index:0;
 const PROXY_URL = '/.netlify/functions/submit';
 
 const sectionNames  = ['autoatencion','cobranza','ventas','inteligencia','educacion','fraude','onboarding'];
-const sectionTitles = ['Autoatencion','Cobranza','Ventas Digitales','Inteligencia Comercial','Educacion Financiera','Prevencion de Fraude','Onboarding de Credito'];
+const sectionTitles = ['Autoatención','Cobranza','Ventas Digitales','Inteligencia Comercial','Educación Financiera','Prevención de Fraude','Onboarding de Crédito'];
 const sectionColors = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)'];
-const fieldNames    = ['Autoatencion','Cobranza','Ventas Digitales','Inteligencia Comercial','Educacion Financiera','Prevencion de Fraude','Onboarding de Credito'];
+const fieldNames    = ['Autoatención','Cobranza','Ventas Digitales','Inteligencia Comercial','Educación Financiera','Prevención de Fraude','Onboarding de Crédito'];
 
 function updateProgress() {
   let filled = 0;
@@ -429,10 +437,27 @@ document.querySelectorAll('.model-item').forEach(cb => cb.addEventListener('chan
 async function submitForm() {
   const empresa  = document.getElementById('f-empresa').value.trim();
   const contacto = document.getElementById('f-contacto').value.trim();
-  if (!empresa || !contacto) {
-    showToast('⚠️ Por favor complete Empresa y Nombre del contacto antes de enviar.');
+  const email    = document.getElementById('f-email').value.trim();
+  const telefono = document.getElementById('f-telefono').value.trim();
+
+  if (!empresa) {
+    showToast('⚠️ Por favor complete el campo Empresa.');
     return;
   }
+  if (!contacto) {
+    showToast('⚠️ Por favor complete el Nombre del contacto.');
+    return;
+  }
+  if (!email) {
+    showToast('⚠️ El Email es obligatorio.');
+    return;
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showToast('⚠️ Por favor ingrese un email válido.');
+    return;
+  }
+
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   showOverlay(true);
@@ -440,7 +465,9 @@ async function submitForm() {
   const fields = {
     'Fecha': new Date().toISOString().split('T')[0],
     'Empresa': empresa,
-    'Contacto': contacto
+    'Contacto': contacto,
+    'Email': email,
+    'Telefono': telefono || 'No proporcionado'
   };
   sectionNames.forEach((name, i) => {
     const checked = [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(cb => cb.value);
@@ -512,6 +539,8 @@ function restartForm() {
   document.querySelectorAll('.model-item').forEach(cb => cb.checked = false);
   document.getElementById('f-empresa').value = '';
   document.getElementById('f-contacto').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-telefono').value = '';
   updateProgress();
   window.scrollTo({top:0, behavior:'smooth'});
 }
