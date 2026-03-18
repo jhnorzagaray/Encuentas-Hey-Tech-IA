@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hey Tech — Explorador de Soluciones IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #05090f;
+    --surface: #0d1420;
+    --surface2: #131d2e;
+    --border: rgba(99,183,255,0.12);
+    --accent: #3b9eff;
+    --accent2: #00e5c3;
+    --accent3: #ff5e84;
+    --text: #e8f1ff;
+    --muted: #637899;
+    --card-bg: rgba(13,20,32,0.85);
+    --glow: rgba(59,158,255,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG GRID */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(59,158,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,158,255,0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ORBS */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+  }
+  .orb1 { width: 600px; height: 600px; background: #1a3d8f; top: -200px; left: -150px; }
+  .orb2 { width: 500px; height: 500px; background: #00294d; bottom: -100px; right: -100px; }
+  .orb3 { width: 300px; height: 300px; background: #00e5c3; top: 40%; left: 60%; opacity: 0.08; }
+
+  /* LAYOUT */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 72px 0 56px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(59,158,255,0.1);
+    border: 1px solid rgba(59,158,255,0.25);
+    border-radius: 100px;
+    padding: 6px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); display: inline-block; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 58px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-bottom: 40px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .progress-bar-bg {
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(.22,1,.36,1);
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 12px; color: var(--muted); white-space: nowrap;
+    font-family: 'Syne', sans-serif; font-weight: 600;
+  }
+
+  /* SECTION CARDS */
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 36px 32px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    animation: fadeUp 0.5s both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section-card:hover {
+    border-color: rgba(59,158,255,0.28);
+    box-shadow: 0 0 40px rgba(59,158,255,0.08);
+  }
+
+  .section-header {
+    display: flex; align-items: flex-start; gap: 18px;
+    margin-bottom: 28px;
+  }
+  .section-icon {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .section-meta { flex: 1; }
+  .section-num {
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .section-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* MODELS GRID */
+  .models-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 600px) { .models-grid { grid-template-columns: 1fr; } }
+
+  /* MODEL CHECKBOX */
+  .model-item { display: none; }
+  .model-label {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    min-height: 72px;
+  }
+  .model-label:hover {
+    border-color: rgba(59,158,255,0.3);
+    background: rgba(59,158,255,0.06);
+  }
+  .model-item:checked + .model-label {
+    border-color: var(--accent);
+    background: rgba(59,158,255,0.12);
+    box-shadow: 0 0 0 1px var(--accent) inset, 0 4px 20px rgba(59,158,255,0.15);
+  }
+  .check-box {
+    width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    background: transparent;
+  }
+  .model-item:checked + .model-label .check-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .check-icon { display: none; width: 12px; height: 12px; }
+  .model-item:checked + .model-label .check-icon { display: block; }
+  .model-info { flex: 1; }
+  .model-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .model-desc {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* SECTION COUNT BADGE */
+  .count-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(59,158,255,0.15);
+    border: 1px solid rgba(59,158,255,0.3);
+    color: var(--accent);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 100px;
+    padding: 2px 10px;
+    margin-top: 6px;
+    transition: all 0.3s;
+  }
+  .count-badge.has-sel {
+    background: rgba(0,229,195,0.15);
+    border-color: rgba(0,229,195,0.4);
+    color: var(--accent2);
+  }
+
+  /* SUBMIT */
+  .submit-section {
+    text-align: center;
+    padding: 48px 0 20px;
+  }
+  .submit-btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, var(--accent), #0070d6);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 18px 48px;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.3s;
+    box-shadow: 0 8px 32px rgba(59,158,255,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .submit-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(59,158,255,0.4); }
+  .submit-btn:hover::before { opacity: 1; }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-note {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* RESULTS PANEL */
+  #results-panel {
+    display: none;
+    animation: fadeUp 0.6s both;
+  }
+  .results-hero {
+    text-align: center;
+    padding: 60px 0 48px;
+  }
+  .results-checkmark {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--accent2), #00b89a);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 28px;
+    font-size: 36px;
+    box-shadow: 0 0 60px rgba(0,229,195,0.3);
+    animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .results-hero h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px; font-weight: 800;
+    margin-bottom: 12px;
+  }
+  .results-hero p { color: var(--muted); font-size: 15px; max-width: 420px; margin: 0 auto; }
+
+  .results-summary {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(12px);
+  }
+  .results-summary h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .result-section { margin-bottom: 20px; }
+  .result-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .result-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .result-chip {
+    background: rgba(59,158,255,0.1);
+    border: 1px solid rgba(59,158,255,0.2);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .no-sel { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* QR SECTION */
+  .qr-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    margin-bottom: 32px;
+  }
+  .qr-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .qr-card p { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  #qr-container {
+    display: inline-block;
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 0 60px rgba(59,158,255,0.2);
+  }
+  .qr-url {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .qr-url a { color: var(--accent); text-decoration: none; }
+
+  /* RESTART */
+  .restart-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--muted);
+    border-radius: 12px;
+    padding: 12px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 16px;
+  }
+  .restart-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ICONS COLORS */
+  .icon-blue  { background: rgba(59,158,255,0.12); }
+  .icon-teal  { background: rgba(0,229,195,0.12); }
+  .icon-rose  { background: rgba(255,94,132,0.12); }
+  .icon-gold  { background: rgba(255,190,60,0.12); }
+  .icon-purple{ background: rgba(158,100,255,0.12); }
+  .icon-green { background: rgba(60,210,120,0.12); }
+  .icon-orange{ background: rgba(255,140,60,0.12); }
+
+  /* DIVIDER */
+  .section-divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 32px 0;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+  }
+  .section-divider::before, .section-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+
+  @media (max-width: 600px) {
+    .section-card { padding: 24px 20px 20px; }
+    .hero { padding: 48px 0 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="wrapper">
+
+  <!-- FORM PANEL -->
+  <div id="form-panel">
+
+    <div class="hero">
+      <div class="hero-badge"><span></span>Explorador de Soluciones IA</div>
+      <h1>¿Qué soluciones de <em>IA</em> necesita su empresa?</h1>
+      <p>Seleccione los modelos que más se adapten a sus necesidades. Esta información nos ayuda a diseñar la propuesta ideal para usted.</p>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">0 / 7 categorías</div>
+    </div>
+
+    <form id="survey-form">
+
+      <!-- 1. AUTOATENCIÓN -->
+      <div class="section-card" style="animation-delay:0.05s">
+        <div class="section-header">
+          <div class="section-icon icon-blue">🤖</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 01</div>
+            <div class="section-title">Autoatención</div>
+            <div class="section-desc">Soluciones 24/7 para que sus clientes y colaboradores resuelvan consultas de forma autónoma.</div>
+            <div class="count-badge" id="cnt-1">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m1_1" name="autoatencion" value="Conversacional en App, Web y WhatsApp">
+          <label class="model-label" for="m1_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Conversacional en App, Web y WhatsApp</div><div class="model-desc">Asistentes virtuales inteligentes que interactúan con clientes para productos y servicios.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_2" name="autoatencion" value="HAVI Aclaraciones">
+          <label class="model-label" for="m1_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">HAVI Aclaraciones</div><div class="model-desc">Gestión conversacional de aclaraciones de cargos no reconocidos.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_3" name="autoatencion" value="Asistente HAP App / WhatsApp">
+          <label class="model-label" for="m1_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente HAP App / WhatsApp</div><div class="model-desc">Atención y aclaración de dudas sobre productos y servicios.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_4" name="autoatencion" value="Asistente Hey X – Productos, Servicios y Analista de Acciones">
+          <label class="model-label" for="m1_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente Hey X – Productos, Servicios y Analista de Acciones</div><div class="model-desc">Atención a clientes empresariales y asesoría en inversiones.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_5" name="autoatencion" value="Asistente Hey Tech – Soporte Integración API">
+          <label class="model-label" for="m1_5">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente Hey Tech – Soporte Integración API</div><div class="model-desc">Soporte técnico para empresas en implementación de soluciones.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_6" name="autoatencion" value="Servicio de Voz (Interacción Natural)">
+          <label class="model-label" for="m1_6">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Servicio de Voz (Interacción Natural)</div><div class="model-desc">Respuestas automatizadas con voz en español, catalán o personalizada.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_7" name="autoatencion" value="Asistente RRHH">
+          <label class="model-label" for="m1_7">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente RRHH</div><div class="model-desc">Soporte conversacional para colaboradores sobre temas de Recursos Humanos.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_8" name="autoatencion" value="Asistente Call Center">
+          <label class="model-label" for="m1_8">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente Call Center</div><div class="model-desc">Detección de motivo de llamada, análisis de sentimiento e identificación de oportunidades de venta.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_9" name="autoatencion" value="Integración IVR + WhatsApp con transferencias a teléfono">
+          <label class="model-label" for="m1_9">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Integración IVR + WhatsApp con transferencias a teléfono</div><div class="model-desc">Reemplazo de IVR y recepción de llamadas inbound por agente virtual.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m1_10" name="autoatencion" value="Asistente Promotores HAP">
+          <label class="model-label" for="m1_10">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente Promotores HAP</div><div class="model-desc">Bot de soporte para promotores y fuerza de ventas.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <!-- 2. COBRANZA -->
+      <div class="section-card" style="animation-delay:0.1s">
+        <div class="section-header">
+          <div class="section-icon icon-teal">💰</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 02</div>
+            <div class="section-title">Cobranza</div>
+            <div class="section-desc">Optimice la recuperación de cartera con modelos que mejoran la tasa de contacto y preservan la relación con el cliente.</div>
+            <div class="count-badge" id="cnt-2">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m2_1" name="cobranza" value="Cobranza al Cliente">
+          <label class="model-label" for="m2_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Cobranza al Cliente</div><div class="model-desc">Identificación y captura de promesas de pago para múltiples productos, dejando buzón cuando no se contesta.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m2_2" name="cobranza" value="Asistente de Cobranza (voz o WhatsApp)">
+          <label class="model-label" for="m2_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente de Cobranza (voz o WhatsApp)</div><div class="model-desc">Envía recordatorios de promesas de pago a clientes en mora.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m2_3" name="cobranza" value="Cobranza Preventiva">
+          <label class="model-label" for="m2_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Cobranza Preventiva</div><div class="model-desc">Envía recordatorios de pagos mínimos de forma preventiva a clientes.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m2_4" name="cobranza" value="Negociación con Clientes">
+          <label class="model-label" for="m2_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Negociación con Clientes</div><div class="model-desc">Ofrece esquemas de pagos a clientes con muchos días en mora.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <!-- 3. VENTAS DIGITALES -->
+      <div class="section-card" style="animation-delay:0.15s">
+        <div class="section-header">
+          <div class="section-icon icon-rose">📈</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 03</div>
+            <div class="section-title">Ventas Digitales</div>
+            <div class="section-desc">Potencie sus estrategias comerciales, desde la venta cruzada hasta el onboarding de nuevos clientes.</div>
+            <div class="count-badge" id="cnt-3">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m3_1" name="ventas" value="Venta Cruzada">
+          <label class="model-label" for="m3_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Venta Cruzada</div><div class="model-desc">Personaliza y ofrece productos complementarios a clientes existentes.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m3_2" name="ventas" value="Asistente de Ventas Digitales (voz o WhatsApp)">
+          <label class="model-label" for="m3_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Asistente de Ventas Digitales (voz o WhatsApp)</div><div class="model-desc">Guía a clientes en el proceso de apertura de cuentas y contratación de productos.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m3_3" name="ventas" value="Onboarding">
+          <label class="model-label" for="m3_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Onboarding</div><div class="model-desc">Asiste al cliente para finalizar la apertura de cuenta y realizar su primer depósito.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m3_4" name="ventas" value="Siguiente Producto Recomendado">
+          <label class="model-label" for="m3_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Siguiente Producto Recomendado</div><div class="model-desc">Motor de ofertas personalizadas por ciclo de vida del cliente.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <!-- 4. INTELIGENCIA COMERCIAL -->
+      <div class="section-card" style="animation-delay:0.2s">
+        <div class="section-header">
+          <div class="section-icon icon-gold">🧠</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 04</div>
+            <div class="section-title">Inteligencia Comercial</div>
+            <div class="section-desc">Transforme grandes volúmenes de datos en insights accionables para anticipar tendencias y optimizar estrategias.</div>
+            <div class="count-badge" id="cnt-4">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m4_1" name="inteligencia" value="Customer Tags">
+          <label class="model-label" for="m4_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Customer Tags</div><div class="model-desc">Etiquetado inteligente de clientes por comportamiento relevante y perfil.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m4_2" name="inteligencia" value="Memorias">
+          <label class="model-label" for="m4_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Memorias</div><div class="model-desc">Identificación, uso y almacenamiento de memorias del usuario.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m4_3" name="inteligencia" value="Propensión de Fuga Logins">
+          <label class="model-label" for="m4_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Propensión de Fuga Logins</div><div class="model-desc">Modelo para predecir fuga con base en login behavior.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m4_4" name="inteligencia" value="Propensión de Fuga TDC">
+          <label class="model-label" for="m4_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Propensión de Fuga TDC</div><div class="model-desc">Predice qué clientes podrían dejar de usar su tarjeta de crédito.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m4_5" name="inteligencia" value="Ingresos Recurrentes">
+          <label class="model-label" for="m4_5">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Ingresos Recurrentes</div><div class="model-desc">Identificación de ingresos constantes, útil para originación o scoring.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m4_6" name="inteligencia" value="Fuga TPV">
+          <label class="model-label" for="m4_6">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Fuga TPV</div><div class="model-desc">Modelo predictivo de fuga en terminales de punto de venta.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m4_7" name="inteligencia" value="Forecast Crecimiento Facturación Clientes">
+          <label class="model-label" for="m4_7">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Forecast Crecimiento Facturación Clientes</div><div class="model-desc">Forecast de crecimiento de ventas en clientes TPV.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <!-- 5. EDUCACIÓN FINANCIERA -->
+      <div class="section-card" style="animation-delay:0.25s">
+        <div class="section-header">
+          <div class="section-icon icon-purple">📚</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 05</div>
+            <div class="section-title">Educación Financiera</div>
+            <div class="section-desc">Empodere a sus clientes con información personalizada para tomar mejores decisiones financieras.</div>
+            <div class="count-badge" id="cnt-5">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m5_1" name="educacion" value="HAVI Analista de Acciones">
+          <label class="model-label" for="m5_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">HAVI Analista de Acciones</div><div class="model-desc">Asesoría financiera conversacional sobre el mercado accionario.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m5_2" name="educacion" value="HAVI Asesor Salud Financiera">
+          <label class="model-label" for="m5_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">HAVI Asesor Salud Financiera</div><div class="model-desc">Identificación de gastos e ingresos recurrentes, lectura de estados de cuenta.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m5_3" name="educacion" value="HAVI Educación Financiera">
+          <label class="model-label" for="m5_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">HAVI Educación Financiera</div><div class="model-desc">Contenidos y respuestas sobre educación financiera para la población.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m5_4" name="educacion" value="Gastos Recurrentes">
+          <label class="model-label" for="m5_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Gastos Recurrentes</div><div class="model-desc">Clasifica comportamientos financieros del cliente a lo largo del tiempo.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <!-- 6. PREVENCIÓN DE FRAUDE -->
+      <div class="section-card" style="animation-delay:0.3s">
+        <div class="section-header">
+          <div class="section-icon icon-rose">🛡️</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 06</div>
+            <div class="section-title">Prevención de Fraude</div>
+            <div class="section-desc">Detecte y prevenga actividades fraudulentas en tiempo real, protegiendo sus activos y la confianza de sus clientes.</div>
+            <div class="count-badge" id="cnt-6">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m6_1" name="fraude" value="Anomalías Captación / Colocación">
+          <label class="model-label" for="m6_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Anomalías Captación / Colocación</div><div class="model-desc">Detecta patrones atípicos en saldos, depósitos y créditos para prevenir errores o fraude.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_2" name="fraude" value="Anomalías Facturación TPV">
+          <label class="model-label" for="m6_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Anomalías Facturación TPV</div><div class="model-desc">Detección de irregularidades en la facturación de comercios.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_3" name="fraude" value="Identificación de alteraciones en SPEIs / Estados de Cuenta">
+          <label class="model-label" for="m6_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Identificación de Alteraciones en SPEIs / Estados de Cuenta</div><div class="model-desc">Detecta inconsistencias en nombres, CLABE y números de cuenta en estados de cuenta.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_4" name="fraude" value="Validación y Detección de Anomalías en Documentos">
+          <label class="model-label" for="m6_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Validación y Detección de Anomalías en Documentos</div><div class="model-desc">Identificación de alteraciones y anomalías en constancias fiscales, actas, boletas, etc.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_5" name="fraude" value="Cuentas Mula (Onboarding)">
+          <label class="model-label" for="m6_5">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Cuentas Mula (Onboarding)</div><div class="model-desc">Identificación de grupos de clientes apócrifos o altamente sospechosos que aperturan cuentas.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_6" name="fraude" value="Videos Verificación">
+          <label class="model-label" for="m6_6">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Videos Verificación</div><div class="model-desc">Identificación de anomalías en el video o audio de verificación de identidad.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_7" name="fraude" value="Análisis de Transacciones Anómalas">
+          <label class="model-label" for="m6_7">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Análisis de Transacciones Anómalas</div><div class="model-desc">Identifica transacciones inusuales (SPEI, TDC/TDD, ligas de cobro) de acuerdo al historial del cliente.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_8" name="fraude" value="Perfiles Transaccionales Anómalos">
+          <label class="model-label" for="m6_8">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Perfiles Transaccionales Anómalos</div><div class="model-desc">Identificación del perfil transaccional y anomalías del cliente en varios productos.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_9" name="fraude" value="Detección de Anomalías en Pagos (VISA / PDF)">
+          <label class="model-label" for="m6_9">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Detección de Anomalías en Pagos (VISA / PDF)</div><div class="model-desc">Asegura el cumplimiento normativo y la prevención de fraudes específicos en pagos.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_10" name="fraude" value="Detección de Anomalías SPEI con Geolocalización de IP">
+          <label class="model-label" for="m6_10">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Detección de Anomalías SPEI + Geolocalización IP</div><div class="model-desc">Mejora la precisión en la detección de fraudes en transferencias, considerando el contexto del cliente.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_11" name="fraude" value="Búsqueda Difusa">
+          <label class="model-label" for="m6_11">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Búsqueda Difusa</div><div class="model-desc">Detección de fondeo de cuentas de colaboradores mediante búsqueda difusa.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m6_12" name="fraude" value="Comunidades Transaccionales">
+          <label class="model-label" for="m6_12">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Comunidades Transaccionales</div><div class="model-desc">Búsqueda de comunidades anómalas transaccionales con distintos productos bancarios.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <!-- 7. ONBOARDING DE CRÉDITO -->
+      <div class="section-card" style="animation-delay:0.35s">
+        <div class="section-header">
+          <div class="section-icon icon-green">📋</div>
+          <div class="section-meta">
+            <div class="section-num">Categoría 07</div>
+            <div class="section-title">Onboarding de Crédito</div>
+            <div class="section-desc">Automatice y optimice la originación de créditos con rapidez, precisión y cumplimiento normativo.</div>
+            <div class="count-badge" id="cnt-7">Ningún modelo seleccionado</div>
+          </div>
+        </div>
+        <div class="models-grid">
+
+          <div><input type="checkbox" class="model-item" id="m7_1" name="onboarding" value="Garantías (Validación y cotización de propiedades)">
+          <label class="model-label" for="m7_1">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Garantías (Validación y cotización de propiedades)</div><div class="model-desc">Valida que la descripción de una propiedad coincida con su estado físico y estima su valor.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m7_2" name="onboarding" value="Transcripción de estados financieros / recibos de nómina">
+          <label class="model-label" for="m7_2">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Transcripción de Estados Financieros / Recibos de Nómina</div><div class="model-desc">Homologa y transcribe información financiera de estados de cuenta y recibos de nómina.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m7_3" name="onboarding" value="Captura y Transcripción de Documentos de crédito">
+          <label class="model-label" for="m7_3">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Captura y Transcripción de Documentos de Crédito</div><div class="model-desc">Transcribe contratos de renta y actas de matrimonio para validar dueños, representantes y domicilios.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m7_4" name="onboarding" value="Detección de calidad de escaneo en documentos">
+          <label class="model-label" for="m7_4">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Detección de Calidad de Escaneo en Documentos</div><div class="model-desc">Asegura la legibilidad y calidad de los documentos escaneados.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m7_5" name="onboarding" value="Transcripción y validación de actas de nacimiento">
+          <label class="model-label" for="m7_5">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Transcripción y Validación de Actas de Nacimiento</div><div class="model-desc">Procesa información de actas de nacimiento para verificación de identidad en procesos de alta.</div></div>
+          </label></div>
+
+          <div><input type="checkbox" class="model-item" id="m7_6" name="onboarding" value="Cuadro Accionario, poderes y limitaciones">
+          <label class="model-label" for="m7_6">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="model-info"><div class="model-name">Cuadro Accionario, Poderes y Limitaciones</div><div class="model-desc">Procesa información relacionada a actas constitutivas y poderes de empresas.</div></div>
+          </label></div>
+
+        </div>
+      </div>
+
+      <div class="submit-section">
+        <button type="button" class="submit-btn" onclick="submitForm()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l8 8-8 8M2 10h16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Ver mis resultados y QR
+        </button>
+        <div class="submit-note">Sus respuestas nos ayudarán a personalizar nuestra propuesta para usted.</div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- RESULTS PANEL -->
+  <div id="results-panel">
+    <div class="results-hero">
+      <div class="results-checkmark">✓</div>
+      <h2>¡Gracias por su interés!</h2>
+      <p>Hemos registrado sus selecciones. A continuación, un resumen de las soluciones que más le interesan y el QR para compartir este cuestionario.</p>
+    </div>
+
+    <div class="results-summary">
+      <h3>📊 Resumen de soluciones seleccionadas</h3>
+      <div id="results-content"></div>
+    </div>
+
+    <div class="qr-card">
+      <h3>🔗 Comparta este cuestionario</h3>
+      <p>Escanee el QR para acceder al formulario desde cualquier dispositivo y compartirlo con su equipo.</p>
+      <div id="qr-container"></div>
+      <div class="qr-url">URL del cuestionario: <a id="qr-url-link" href="#">heytech-survey.html</a></div>
+    </div>
+
+    <div style="text-align:center">
+      <button class="restart-btn" onclick="restartForm()">
+        ← Modificar selecciones
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── PROGRESS ─────────────────────────────────────────────────────────────
+  const sectionNames = ['autoatencion','cobranza','ventas','inteligencia','educacion','fraude','onboarding'];
+  const sectionTitles = ['Autoatención','Cobranza','Ventas Digitales','Inteligencia Comercial','Educación Financiera','Prevención de Fraude','Onboarding de Crédito'];
+
+  function updateProgress() {
+    let filled = 0;
+    sectionNames.forEach((name, i) => {
+      const checked = document.querySelectorAll(`input[name="${name}"]:checked`).length;
+      const badge = document.getElementById(`cnt-${i+1}`);
+      if (checked > 0) {
+        filled++;
+        badge.textContent = `${checked} modelo${checked>1?'s':''} seleccionado${checked>1?'s':''}`;
+        badge.classList.add('has-sel');
+      } else {
+        badge.textContent = 'Ningún modelo seleccionado';
+        badge.classList.remove('has-sel');
+      }
+    });
+    const pct = Math.round((filled / 7) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = `${filled} / 7 categorías`;
+  }
+
+  document.querySelectorAll('.model-item').forEach(cb => {
+    cb.addEventListener('change', updateProgress);
+  });
+
+  // ── SUBMIT ────────────────────────────────────────────────────────────────
+  function submitForm() {
+    document.getElementById('form-panel').style.display = 'none';
+    document.getElementById('results-panel').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    buildResults();
+    buildQR();
+  }
+
+  function buildResults() {
+    const container = document.getElementById('results-content');
+    let html = '';
+    sectionNames.forEach((name, i) => {
+      const checked = [...document.querySelectorAll(`input[name="${name}"]:checked`)];
+      html += `<div class="result-section">`;
+      html += `<div class="result-section-title"><span style="opacity:.5">0${i+1}</span> ${sectionTitles[i]}</div>`;
+      if (checked.length === 0) {
+        html += `<div class="no-sel">Sin selecciones en esta categoría</div>`;
+      } else {
+        html += `<div class="result-chips">`;
+        checked.forEach(cb => {
+          html += `<span class="result-chip">${cb.value}</span>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  function buildQR() {
+    const url = window.location.href.split('?')[0];
+    document.getElementById('qr-url-link').href = url;
+    document.getElementById('qr-url-link').textContent = url;
+    document.getElementById('qr-container').innerHTML = '';
+    new QRCode(document.getElementById('qr-container'), {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+
+  function restartForm() {
+    document.getElementById('results-panel').style.display = 'none';
+    document.getElementById('form-panel').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
