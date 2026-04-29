@@ -12,9 +12,9 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,212,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.028) 1px,transparent 1px);background-size:52px 52px;pointer-events:none}
 .wrapper{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 28px 80px}
 .hero{text-align:center;padding:64px 0 52px;position:relative}
-.hero::before{content:'';position:absolute;top:40px;left:50%;transform:translateX(-50%);width:420px;height:160px;background:radial-gradient(ellipse,rgba(0,212,255,.18) 0%,transparent 70%);pointer-events:none}
-.logo-wrap{margin-bottom:40px;display:block;text-align:center}
-.logo-wrap img{height:auto;width:100%;max-width:600px;display:block;filter:drop-shadow(0 0 28px rgba(0,212,255,.35))}
+.hero::before{content:'';display:none}
+.logo-wrap{margin-bottom:40px;display:block;width:100%;text-align:center}
+.logo-wrap img{height:auto;width:100%;max-width:824px;display:block;border-radius:8px}
 .hero-rule{width:56px;height:2px;background:linear-gradient(90deg,transparent,var(--c1),transparent);margin:0 auto 32px}
 .hero h1{font-family:'Calibri',Arial,sans-serif;font-size:clamp(24px,4vw,40px);font-weight:700;line-height:1.18;color:var(--white);margin-bottom:16px}
 .hero h1 span{color:var(--c1)}
@@ -86,7 +86,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 #results-panel{display:none;animation:fadeUp .5s both}
 .results-hero{text-align:center;padding:60px 0 48px}
 .results-logo{margin-bottom:36px}
-.results-logo img{height:76px;width:auto;filter:drop-shadow(0 0 24px rgba(0,212,255,.35))}
+.results-logo img{height:auto;width:100%;max-width:824px;display:block;margin:0 auto;border-radius:8px}
 .results-check{width:68px;height:68px;border:2px solid var(--c2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:28px;color:var(--c2);box-shadow:0 0 40px rgba(0,232,150,.2);animation:popIn .45s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
 .results-hero h2{font-family:'Calibri',Arial;font-size:30px;font-weight:700;color:var(--white);margin-bottom:10px}
