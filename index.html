@@ -311,7 +311,7 @@ function showResults(){
   var html='';
   SEC.forEach(function(s,i){var checked=[].slice.call(document.querySelectorAll('input[name="'+s.name+'"]:checked'));html+='<div class="result-section"><div class="result-section-title" style="color:'+COLORS[i]+'">'+s.label+'</div>';if(!checked.length) html+='<div class="no-sel">Sin selecciones</div>';else html+='<div class="result-chips">'+checked.map(function(c){return'<span class="result-chip">'+c.value+'</span>';}).join('')+'</div>';html+='</div>';});
   document.getElementById('rc').innerHTML=html;
-  var url=window.location.href.split('?')[0];
+  var url='https://hey.inc/EncuentasHeyTechIA';
   document.getElementById('qu').href=url;document.getElementById('qu').textContent=url;
   document.getElementById('qr').innerHTML='';
   new QRCode(document.getElementById('qr'),{text:url,width:200,height:200,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
